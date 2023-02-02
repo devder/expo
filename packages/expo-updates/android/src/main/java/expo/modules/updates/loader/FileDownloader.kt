@@ -205,13 +205,6 @@ open class FileDownloader(context: Context, private val client: OkHttpClient) {
       return
     }
 
-    if (manifestPartBodyAndHeaders == null && directivePartBodyAndHeaders == null) {
-      val message = "Multipart manifest response missing at least one of a manifest or directive part"
-      logger.error(message, UpdatesErrorCode.UpdateFailedToLoad)
-      callback.onFailure(message, IOException("Malformed multipart manifest response"))
-      return
-    }
-
     val extensions = try {
       extensionsBody?.let { JSONObject(it) }
     } catch (e: Exception) {
@@ -315,6 +308,11 @@ open class FileDownloader(context: Context, private val client: OkHttpClient) {
           }
         }
       )
+    }
+
+    // if both parts are empty, we still want to finish
+    if (manifestResponseInfo == null && directiveResponseInfo == null) {
+      maybeFinish()
     }
   }
 
